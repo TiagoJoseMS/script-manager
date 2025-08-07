@@ -8,7 +8,8 @@ Script Manager transforms the way you work with PyQGIS scripts by providing:
 - **Visual Script Browser** with detailed information and descriptions
 - **Quick Access Menu** for rapid script execution
 - **Automatic File Monitoring** that detects changes and reloads scripts
-- **Multi-language Support** (English, Portuguese, Spanish)
+- **Enhanced Security and Error Handling** for safe script execution
+- **Multi-language Support** (English, Portuguese)
 - **Complete Qt5/Qt6 Compatibility** for future-proof operation
 
 ## ✨ Key Features
@@ -18,6 +19,8 @@ Script Manager transforms the way you work with PyQGIS scripts by providing:
 - Preview descriptions and file locations
 - Execute scripts directly from the browser
 - Refresh and folder management tools
+- **Console Output Capture**: Displays `print()` statements and error messages from executed scripts
+- **Detailed Error Reporting**: Provides clear error messages and traceback for debugging
 
 ### ⚡ Quick Access Menu
 - Traditional menu structure for fast execution
@@ -31,16 +34,27 @@ Script Manager transforms the way you work with PyQGIS scripts by providing:
 - No manual refresh required
 - Efficient file system watching
 
+### 🔒 Safe Script Execution
+- **Script Validation**: Performs pre-execution checks to identify potentially risky operations (e.g., `subprocess.call`, `subprocess.run`, `subprocess.Popen`, `os.system`, `eval(`, `exec(`, `__import__`)
+- **Isolated Execution Environment**: Scripts run in a controlled namespace with pre-defined QGIS and PyQt imports to prevent unintended side effects and ensure access to necessary modules
+- **Crash Prevention**: Robust error handling mechanisms prevent script errors from crashing QGIS, providing a stable environment
+
 ### 🌍 Internationalization
 - Multi-language interface support
 - Automatic language detection from QGIS settings
-- Supports English, Portuguese (Brazil), and Spanish
-- Easy to extend for additional languages
+- **Currently supports**: English (en) and Portuguese Brazil (pt_BR)
+- Easy to extend for additional languages by modifying the `Translator` class
 
 ### 🔧 Qt Compatibility
 - Works seamlessly with both Qt5 and Qt6
 - Automatic Qt version detection
-- Compatible import handling
+- Compatible import handling for various Qt modules (e.g., `QMessageBox`, `QInputDialog`, `QFileDialog`, `QProgressBar`, `QComboBox`, `QCheckBox`)
+- Handles differences in Qt API calls:
+  - `Qt.UserRole` vs `Qt.ItemDataRole.UserRole`
+  - `dialog.exec_()` vs `dialog.exec()`
+  - `Qt.RichText` vs `Qt.TextFormat.RichText`
+  - `QFont.Bold` vs `QFont.Weight.Bold`
+  - `Qt.Horizontal` vs `Qt.Orientation.Horizontal`
 - Future-proof architecture
 
 ## 🚀 Installation
@@ -55,8 +69,8 @@ Script Manager transforms the way you work with PyQGIS scripts by providing:
 1. Download the plugin zip file
 2. Extract to your QGIS plugins directory:
    - **Windows:** `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
-   - **macOS:** `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/`
-   - **Linux:** `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`
+   - **macOS:** `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins\`
+   - **Linux:** `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins\`
 3. Restart QGIS
 4. Enable the plugin in **Plugins** → **Manage and Install Plugins** → **Installed**
 
@@ -112,13 +126,6 @@ Descrição: Este script realiza operações GIS personalizadas
 """
 ```
 
-```python
-"""
-Herramienta Personalizada  
-Descripción: Este script realiza operaciones GIS personalizadas
-"""
-```
-
 ## 🎮 Usage
 
 ### Script Browser
@@ -126,6 +133,7 @@ Descripción: Este script realiza operaciones GIS personalizadas
 2. Browse through available scripts in the left panel
 3. View detailed information in the right panel
 4. Click **Execute Script** to run the selected script
+5. **Monitor Output**: Check the console output and warnings sections for script execution results
 
 ### Quick Access
 1. Navigate to **Script Manager** → **Quick Access**
@@ -160,41 +168,48 @@ You can access this location through:
 - **Qt:** Version 5.x or 6.x (auto-detected)
 - **Operating System:** Windows, macOS, Linux
 
+### Safe Script Execution Environment
+The plugin executes scripts within a controlled environment using the `SafeScriptExecutor` class, which:
+- Captures `stdout` and `stderr` to prevent direct console interference
+- Performs security checks for potentially dangerous imports
+- Provides a safe namespace with pre-loaded QGIS and PyQt modules including:
+  - **QGIS Core**: `QgsProject`, `QgsVectorLayer`, `QgsRasterLayer`, `QgsFeature`, `QgsGeometry`, `QgsCoordinateReferenceSystem`, `QgsCoordinateTransform`, `QgsMessageLog`, `QgsUnitTypes`, `QgsWkbTypes`, `QgsMapLayerProxyModel`, `QgsProcessingContext`
+  - **QGIS GUI**: `QgsMapCanvas`, `QgsMapTool`
+  - **PyQt Widgets**: `QMessageBox`, `QInputDialog`, `QFileDialog`, `QProgressBar`, `QComboBox`, `QCheckBox`
+  - **PyQt Core**: `Qt`, `QTimer`, `QThread`, `pyqtSignal`
+  - **PyQt GUI**: `QIcon`, `QPixmap`, `QColor`
+  - **Standard Libraries**: `json`, `math`, `datetime`, `re`
+
 ### Qt Compatibility Layer
-The plugin includes a comprehensive Qt compatibility system:
-```python
-class QtCompat:
-    """Qt compatibility helper class"""
-    
-    @staticmethod
-    def get_user_role():
-        return Qt.ItemDataRole.UserRole if QT_VERSION == 6 else Qt.UserRole
-    
-    @staticmethod
-    def exec_dialog(dialog):
-        return dialog.exec() if QT_VERSION == 6 else dialog.exec_()
-```
+The plugin includes a comprehensive `QtCompat` class to handle differences between Qt5 and Qt6 APIs, ensuring broad compatibility. This includes adapting methods for:
+- User roles (`Qt.UserRole` vs `Qt.ItemDataRole.UserRole`)
+- Dialog execution (`dialog.exec_()` vs `dialog.exec()`)
+- Text formats (`Qt.RichText` vs `Qt.TextFormat.RichText`)
+- Font weights (`QFont.Bold` vs `QFont.Weight.Bold`)
+- Orientations (`Qt.Horizontal` vs `Qt.Orientation.Horizontal`)
 
 ### File System Monitoring
-- Uses `QFileSystemWatcher` for efficient monitoring
-- Debounced reloading prevents excessive updates
-- Monitors both directory changes and individual file modifications
+- Uses `QFileSystemWatcher` for efficient monitoring of the scripts directory
+- Debounced reloading prevents excessive updates when multiple changes occur rapidly
+- Monitors both directory changes and individual file modifications to ensure scripts are always up-to-date
 
 ## 🌍 Internationalization
 
 ### Supported Languages
 - **English** (en)
-- **Portuguese Brazil** (pt_BR) 
-- **Spanish** (es_ES)
+- **Portuguese Brazil** (pt_BR)
 
 ### Language Detection
-The plugin automatically detects your QGIS interface language from settings and adjusts accordingly.
+The plugin automatically detects your QGIS interface language from settings and adjusts accordingly. The detection system maps language codes as follows:
+- `pt` → `pt_BR`
+- Other languages fall back to English
 
 ### Adding New Languages
 To contribute translations:
-1. Extend the `translations` dictionary in the `Translator` class
+1. Extend the `translations` dictionary in the `Translator` class within `script_manager.py`
 2. Add your language code and translated strings
-3. Submit a pull request
+3. Update the `language_map` in the `detect_qgis_language` method if needed
+4. Submit a pull request
 
 ## 🐛 Troubleshooting
 
@@ -214,6 +229,8 @@ To contribute translations:
 - Check the QGIS message log for detailed error information
 - Ensure your script has proper imports
 - Verify file permissions and encoding (UTF-8 recommended)
+- **Review Console Output**: The Script Browser's output panel will show `print()` statements and error messages from your script, which can help in debugging
+- **Validation Warnings**: Pay attention to any warnings about potentially risky operations detected during script validation
 
 ### Debug Information
 Enable debug logging by checking the QGIS message log:
@@ -260,13 +277,13 @@ This plugin is licensed under the GNU General Public License v2.0. See the [LICE
 - ✅ Script browser with detailed information
 - ✅ Quick access menu system
 - ✅ Automatic file system monitoring
-- ✅ Multi-language support (EN, PT-BR, ES)
+- ✅ Multi-language support (EN, PT-BR)
 - ✅ Complete Qt5/Qt6 compatibility
 - ✅ Professional user interface
 - ✅ Comprehensive error handling
 - ✅ Automatic script reloading
 - ✅ Integrated help system
+- ✅ Safe script execution environment
+- ✅ Console output capture
 
 ---
-
-*For more information, bug reports, or feature requests, please visit the [GitHub repository](https://github.com/TiagoJoseMS/script-manager).*
