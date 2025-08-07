@@ -3,51 +3,43 @@ name=Script Manager
 qgisMinimumVersion=3.0
 qgisMaximumVersion=4.99
 supportsQt6=True
-description=Professional PyQGIS script management plugin with visual browser, automatic monitoring, and multi-language support. Organize, execute, and manage custom Python scripts with an intuitive interface featuring Qt5/Qt6 compatibility and real-time file system monitoring.
+description=A PyQGIS script manager for safe execution, debugging, and automation. Features a visual browser with an integrated output console, automatic file monitoring, script validation, and full Qt5/Qt6 support.
 version=1.0
 author=Tiago José M. Silva
 email=tiago.moraessilva@hotmail.com
 
-about=Script Manager provides a comprehensive solution for managing PyQGIS scripts within QGIS. Features include: a visual script browser with detailed descriptions, quick access menu for rapid execution, automatic file system monitoring that detects changes and reloads scripts, multi-language interface support (English, Portuguese, Spanish), and complete Qt5/Qt6 compatibility for future-proof operation. The plugin automatically creates a scripts folder, provides example scripts, and offers professional error handling with detailed logging. Perfect for GIS professionals who need to organize and execute custom PyQGIS tools efficiently.
+about=Script Manager provides a robust environment for managing, executing, and debugging PyQGIS scripts. Its core features include: a visual script browser with an integrated console to capture print() statements and errors in real-time; a safe execution environment that prevents script failures from crashing QGIS; pre-execution validation to warn against risky code; automatic file monitoring for instant reloading; and a quick access menu for routine tasks. With full Qt5/Qt6 compatibility and multi-language support (EN, PT-BR), it streamlines the development workflow for GIS professionals and developers.
 
 tracker=https://github.com/TiagoJoseMS/script-manager/issues
 repository=https://github.com/TiagoJoseMS/script-manager
 homepage=https://github.com/TiagoJoseMS/script-manager
 
-# Icon file (ensure this exists in your plugin folder)
 icon=icon.png
 
-# Tags are comma separated with spaces allowed - important for discoverability
-tags=python,scripts,automation,pyqgis,tools,productivity,management,browser,monitoring,multilingual,professional
+# Tags for plugin discovery
+tags=python,scripts,automation,pyqgis,debug,console,safe,security,validation,error handling,tools,productivity,management,browser,monitoring,multilingual,professional
 
-# Plugin category
 category=Scripts
 
-# Plugin is stable for production use
 experimental=False
 deprecated=False
 
-# Change log for this version
-changelog=Version 1.0 - Initial Release
-    - Visual script browser with detailed information display
-    - Quick access menu system with hover tooltips
-    - Automatic file system monitoring and script reloading  
-    - Multi-language support (English, Portuguese, Spanish)
-    - Complete Qt5/Qt6 compatibility layer
-    - Professional user interface with status feedback
-    - Comprehensive error handling and logging
-    - Built-in help system and documentation
-    - Example script generation for quick start
-    - Folder management and direct access tools
+# Changelog matching the README.md file
+changelog=Version 1.0 (Initial Release)
+    - ✅ Script browser with detailed information
+    - ✅ Quick access menu system
+    - ✅ Automatic file system monitoring
+    - ✅ Multi-language support (EN, PT-BR)
+    - ✅ Complete Qt5/Qt6 compatibility
+    - ✅ Professional user interface
+    - ✅ Comprehensive error handling
+    - ✅ Automatic script reloading
+    - ✅ Integrated help system
+    - ✅ Safe script execution environment
+    - ✅ Console output capture
 
-# Indicates if the plugin has a processing provider
 hasProcessingProvider=no
 
-# Server settings (for official repository)
 server=False
 
-# Plugin dependencies (none required beyond QGIS core)
-# external_deps=
-
-# Minimum supported Python version
 pythonMinimumVersion=3.6
