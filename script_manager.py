@@ -425,11 +425,11 @@ class ScriptBrowserDialog(QDialog):
         title.setFont(QFont("", 11, QtCompat.get_font_weight_bold()))
         title.setStyleSheet("color: #2E86AB; margin: 0px; padding: 0px;")
         
-        count_label = QLabel(f"({len(self.scripts_info)} {tr('scripts_found')})")
-        count_label.setStyleSheet("color: #666; font-style: italic; margin: 0px; padding: 0px;")
+        self.count_label = QLabel(f"({len(self.scripts_info)} {tr('scripts_found')})")
+        self.count_label.setStyleSheet("color: #666; font-style: italic; margin: 0px; padding: 0px;")
         
         header_layout.addWidget(title)
-        header_layout.addWidget(count_label)
+        header_layout.addWidget(self.count_label)
         header_layout.addStretch()
         
         header_widget = QWidget()
@@ -451,10 +451,7 @@ class ScriptBrowserDialog(QDialog):
         self.script_list = QListWidget()
         self.script_list.setMaximumWidth(280)
         
-        for filename, script_info in sorted(self.scripts_info.items()):
-            item = QListWidgetItem(f"📄 {script_info['name']}")
-            item.setData(QtCompat.get_user_role(), (filename, script_info))
-            self.script_list.addItem(item)
+        self.refresh_scripts()
         
         self.script_list.currentItemChanged.connect(self.on_script_selected)
         list_layout.addWidget(self.script_list)
@@ -701,7 +698,26 @@ class ScriptBrowserDialog(QDialog):
         self.append_output("Console ready for script execution...")
     
     def refresh_scripts(self):
-        self.accept()
+        ScriptManager(iface).load_scripts()
+
+        current_items = {
+            self.script_list.item(i).data(QtCompat.get_user_role())[0]
+            for i in range(self.script_list.count())
+        }
+        new_files = set(self.scripts_info.keys())
+
+        for i in reversed(range(self.script_list.count())):
+            filename = self.script_list.item(i).data(QtCompat.get_user_role())[0]
+            if filename not in new_files:
+                self.script_list.takeItem(i)
+
+        for filename in sorted(new_files - current_items):
+            script_info = self.scripts_info[filename]
+            item = QListWidgetItem(f"📄 {script_info['name']}")
+            item.setData(QtCompat.get_user_role(), (filename, script_info))
+            self.script_list.addItem(item)
+
+        self.count_label.setText(f"({len(self.scripts_info)} {tr('scripts_found')})")
     
     def open_scripts_folder(self):
         import subprocess
