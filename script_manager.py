@@ -24,6 +24,7 @@ from qgis.PyQt.QtCore import Qt
 QT_VERSION = 6 if QT_VERSION_STR.startswith('6') else 5
 
 from qgis.core import QgsMessageLog, Qgis
+from qgis.gui import QgsFileWidget
 from qgis.utils import iface
 
 
@@ -231,6 +232,7 @@ class Translator:
                 'quick_access': 'Quick Access',
                 'reload_scripts': 'Reload Scripts',
                 'open_scripts_folder': 'Open Scripts Folder',
+                'update_scripts_folder_location': 'Update Scripts Folder Location',
                 'about': 'About',
                 'no_scripts_found': 'No scripts found',
                 'available_scripts': 'Available Scripts',
@@ -243,6 +245,8 @@ class Translator:
                 'execute_script': 'Execute Script',
                 'refresh_list': 'Refresh List',
                 'open_folder': 'Open Folder',
+                'apply': 'Apply',
+                'reset': 'Reset',
                 'close': 'Close',
                 'no_script_selected': 'No script selected',
                 'output': 'Output',
@@ -285,6 +289,7 @@ class Translator:
                 'tooltip_browser': 'Open browser with detailed script descriptions and output capture',
                 'tooltip_reload': 'Reload all scripts from folder',
                 'tooltip_folder': 'Open the folder where scripts are stored',
+                'tooltip_update_scripts_folder_location': 'Change location of the scripts folder',
                 'tooltip_about': 'Information about Script Manager'
             },
             
@@ -751,8 +756,20 @@ class ScriptManager:
     def __init__(self, iface):
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
-        self.scripts_dir = os.path.join(self.plugin_dir, 'scripts')
-        
+        self.default_scripts_dir = os.path.join(self.plugin_dir, 'scripts')
+        self.scripts_dir = self.default_scripts_dir
+        self.ini_path = os.path.join(self.plugin_dir, "settings", "script-manager.ini")
+        self.plugin_settings = QSettings(self.ini_path, QSettings.IniFormat)
+        if not "scripts_dir" in self.plugin_settings.allKeys():
+            self.plugin_settings.setValue("scripts_dir", self.scripts_dir)
+        else:
+            self.scripts_dir = self.plugin_settings.value("scripts_dir", self.default_scripts_dir)
+            if not os.path.exists(self.scripts_dir) and self.scripts_dir != self.default_scripts_dir:
+                self.scripts_dir = self.default_scripts_dir
+                self.plugin_settings.setValue("scripts_dir", self.scripts_dir)
+                QgsMessageLog.logMessage(f"Given Scripts Folder did not exists. Value was reseted: {str(self.scripts_dir)}", 
+                                    "Script Manager", Qgis.Warning)
+
         if not os.path.exists(self.scripts_dir):
             os.makedirs(self.scripts_dir)
             self.create_example_script()
@@ -1057,6 +1074,12 @@ if __name__ == "__main__":
             self.menu.addAction(open_folder_action)
             self.actions.append(open_folder_action)
             
+            update_folder_action = QAction(f"⚙️ {tr('update_scripts_folder_location')}", self.iface.mainWindow())
+            update_folder_action.setToolTip(tr('tooltip_update_scripts_folder_location'))
+            update_folder_action.triggered.connect(self.update_scripts_folder_location)
+            self.menu.addAction(update_folder_action)
+            self.actions.append(update_folder_action)
+            
             info_action = QAction(f"ℹ️ {tr('about')}", self.iface.mainWindow())
             info_action.setToolTip(tr('tooltip_about'))
             info_action.triggered.connect(self.show_info)
@@ -1191,6 +1214,67 @@ if __name__ == "__main__":
                 None, tr('open_scripts_folder'), 
                 f"{tr('scripts_location')}:\n{self.scripts_dir}\n\n{tr('error_opening_folder')}: {str(e)}"
             )
+    
+    def update_scripts_folder_location(self):
+        dialog = QDialog()
+        dialog.setWindowTitle(tr('update_scripts_folder_location'))
+        dialog.resize(400, 100)
+        dialog.setMinimumSize(400, 100)
+        
+        layout = QVBoxLayout()
+
+        self.file_widget = QgsFileWidget()
+        self.file_widget.setStorageMode(QgsFileWidget.StorageMode(1))
+        self.file_widget.setFilePath(self.plugin_settings.value("scripts_dir"))
+        
+        file_widget_layout = QVBoxLayout()
+        file_widget_layout.addWidget(QLabel(tr("update_scripts_folder_location")))
+        file_widget_layout.addWidget(self.file_widget)
+        file_widget_layout.addStretch()
+
+        ok_button = QPushButton(tr("apply"))
+        ok_button.clicked.connect(self.apply_scripts_folder_changed)
+        
+        reset_button = QPushButton(tr("reset"))
+        reset_button.clicked.connect(self.reset_scripts_folder)
+
+        close_button = QPushButton(tr("close"))
+        close_button.clicked.connect(dialog.close)
+        
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(ok_button)
+        button_layout.addWidget(reset_button)
+        button_layout.addWidget(close_button)
+        button_layout.addStretch()
+
+        layout.addLayout(file_widget_layout)
+        layout.addLayout(button_layout)
+        dialog.setLayout(layout)
+        
+        QtCompat.exec_dialog(dialog)
+            
+    def apply_scripts_folder_changed(self):
+        scripts_dir_new = self.file_widget.filePath()
+        if os.path.exists(scripts_dir_new):
+            self.plugin_settings.setValue("scripts_dir", scripts_dir_new)
+            self.scripts_dir = scripts_dir_new
+            self.reload_scripts()
+            QgsMessageLog.logMessage(f"Scripts Folder location updated: {str(scripts_dir_new)}",
+                                    "Script Manager", Qgis.Info)
+            QMessageBox.information(None, "Info", f"Scripts Folder location updated:\n{str(scripts_dir_new)}")
+        else:
+            QgsMessageLog.logMessage(f"Directory doesn't exist: {str(scripts_dir_new)}",
+                                   "Script Manager", Qgis.Critical)
+            QMessageBox.critical(None, "Error", f"Directory doesn't exist: {str(scripts_dir_new)}")
+    
+    def reset_scripts_folder(self):
+        self.plugin_settings.setValue("scripts_dir", self.default_scripts_dir)
+        self.file_widget.setFilePath(self.default_scripts_dir)
+        self.reload_scripts()
+        QgsMessageLog.logMessage(f"Scripts Folder location updated: {str(self.default_scripts_dir)}",
+                                "Script Manager", Qgis.Info)
+        QMessageBox.information(None, "Info", f"Scripts Folder location updated:\n{str(self.default_scripts_dir)}")
     
     def show_info(self):
         lang = _translator.current_language

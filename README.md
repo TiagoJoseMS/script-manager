@@ -143,6 +143,7 @@ Descrição: Este script realiza operações GIS personalizadas
 ### Management Tools
 - **Reload Scripts**: Manually refresh the script list
 - **Open Scripts Folder**: Quick access to the scripts directory
+- **Update Scripts Folder Location**: Change the location of the scripts directory
 - **About**: View plugin information and usage instructions
 
 ## ⚙️ Configuration
