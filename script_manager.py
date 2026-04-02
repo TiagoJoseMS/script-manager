@@ -402,10 +402,11 @@ class ScriptWatcher(QObject):
 class ScriptBrowserDialog(QDialog):
     """Enhanced script browser with output capture and error handling"""
     
-    def __init__(self, scripts_info, execute_callback, parent=None):
+    def __init__(self, scripts_info, execute_callback, parent=None, refresh_callback=None):
         super().__init__(parent)
         self.scripts_info = scripts_info
         self.execute_callback = execute_callback
+        self.refresh_callback = refresh_callback
         self.current_script = None
         self.executor = SafeScriptExecutor()
         self.setup_ui()
@@ -701,7 +702,21 @@ class ScriptBrowserDialog(QDialog):
         self.append_output("Console ready for script execution...")
     
     def refresh_scripts(self):
-        self.accept()
+        """Recarrega a lista de scripts sem fechar o diálogo."""
+        if self.refresh_callback:
+            updated_scripts = self.refresh_callback()
+            self.scripts_info = updated_scripts
+
+        self.script_list.clear()
+        for filename, script_info in sorted(self.scripts_info.items()):
+            item = QListWidgetItem(f"📄 {script_info['name']}")
+            item.setData(QtCompat.get_user_role(), (filename, script_info))
+            self.script_list.addItem(item)
+
+        if self.script_list.count() > 0:
+            self.script_list.setCurrentRow(0)
+        else:
+            self.on_script_selected(None, None)
     
     def open_scripts_folder(self):
         import subprocess
@@ -1077,7 +1092,8 @@ if __name__ == "__main__":
                 self.browser_dialog.close()
             
             self.browser_dialog = ScriptBrowserDialog(
-                self.scripts, self.execute_script, self.iface.mainWindow()
+                self.scripts, self.execute_script, self.iface.mainWindow(),
+                refresh_callback=self.reload_and_return_scripts
             )
             self.browser_dialog.show()
             
@@ -1161,6 +1177,12 @@ if __name__ == "__main__":
         else:
             return success
     
+    def reload_and_return_scripts(self):
+        """Recarrega scripts do disco e retorna o dicionário atualizado."""
+        self.load_scripts()
+        self.create_menu()
+        return self.scripts
+
     def reload_scripts(self):
         self.reload_timer.start(500)
     
