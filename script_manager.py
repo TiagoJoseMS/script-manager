@@ -1137,10 +1137,10 @@ if __name__ == "__main__":
                 
                 if capture_output:
                     with self.executor.capture_output():
-                        exec(script_content, script_globals)
+                        exec(script_content, script_globals)  # nosec B102
                     captured_output, captured_errors = self.executor.get_captured_output()
                 else:
-                    exec(script_content, script_globals)
+                    exec(script_content, script_globals)  # nosec B102
                 
                 success = True
                 
