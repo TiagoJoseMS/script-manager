@@ -4,7 +4,7 @@ qgisMinimumVersion=3.0
 qgisMaximumVersion=4.99
 supportsQt6=True
 description=A PyQGIS script manager for safe execution, debugging, and automation. Features a visual browser with an integrated output console, automatic file monitoring, script validation, and full Qt5/Qt6 support.
-version=1.0
+version=1.1.0
 author=Tiago José M. Silva
 email=tiago.moraessilva@hotmail.com
 
