@@ -285,5 +285,7 @@ This plugin is licensed under the GNU General Public License v2.0. See the [LICE
 - ✅ Integrated help system
 - ✅ Safe script execution environment
 - ✅ Console output capture
-
+### Version 1.1
+- 🐛 Fixed: "Refresh List" button in Script Browser no longer closes the dialog
+- ✅ Script list is now reloaded in place without interrupting the user's workflow
 ---
